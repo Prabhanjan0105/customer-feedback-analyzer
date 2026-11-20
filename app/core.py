@@ -238,10 +238,163 @@ def milestone_2(
 
 
 
-# --- Milestone 3: Fine-tune the model using the Hugging Face Trainer.
-# Hint: Use the Hugging Face Trainer class, as shown in the drill, to manage the fine-tuning process.
-def milestone_3():  # TODO(milestone 3)
-    raise NotImplementedError("TODO(milestone 3)")
+
+def milestone_3(
+    model_dir="models/feedback_gpt2",
+    output_dir="models/feedback_finetuned",
+    epochs=5,
+    batch_size=4,
+    learning_rate=0.0001,
+    max_length=128
+):
+    """
+    Fine-tune the extended GPT-2 model
+    using Hugging Face Trainer.
+    """
+    from pathlib import Path
+
+    import torch
+    from transformers import (
+        AutoModelForCausalLM,
+        AutoTokenizer,
+        Trainer,
+        TrainingArguments
+    )
+
+    from app.training import (
+        FeedbackDataset,
+        FeedbackCollator
+    )
+
+    if epochs <= 0:
+        raise ValueError("epochs must be positive")
+
+    if batch_size < 1:
+        raise ValueError("batch_size must be positive")
+
+    if learning_rate <= 0:
+        raise ValueError(
+            "learning_rate must be positive"
+        )
+
+    model_path = Path(model_dir)
+
+    if not model_path.exists():
+        raise FileNotFoundError(
+            "Extended model not found. "
+            "Run python extend_tokenizer.py first."
+        )
+
+    torch.manual_seed(42)
+
+    # Load the labeled feedback dataset
+    data = milestone_1()
+
+    print("Loading extended GPT-2 model...")
+
+    tokenizer = AutoTokenizer.from_pretrained(
+        str(model_path)
+    )
+
+    model = AutoModelForCausalLM.from_pretrained(
+        str(model_path)
+    )
+
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    model.config.pad_token_id = (
+        tokenizer.pad_token_id
+    )
+
+    # Confirm all category tokens are available
+    for token in data["category_tokens"]:
+        token_ids = tokenizer.encode(
+            token,
+            add_special_tokens=False
+        )
+
+        if len(token_ids) != 1:
+            raise ValueError(
+                f"Missing category token: {token}"
+            )
+
+    train_dataset = FeedbackDataset(
+        examples=data["dataset"],
+        tokenizer=tokenizer,
+        max_length=max_length
+    )
+
+    data_collator = FeedbackCollator(
+        pad_token_id=tokenizer.pad_token_id
+    )
+
+    output_path = Path(output_dir)
+    output_path.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    # Save checkpoints separately from the final model
+    checkpoint_path = (
+        output_path / "checkpoints"
+    )
+
+    training_args = TrainingArguments(
+        output_dir=str(checkpoint_path),
+        num_train_epochs=epochs,
+        per_device_train_batch_size=batch_size,
+        learning_rate=learning_rate,
+        weight_decay=0.01,
+        logging_steps=1,
+        logging_strategy="steps",
+        save_strategy="no",
+        report_to="none",
+        remove_unused_columns=False,
+        dataloader_num_workers=0,
+        fp16=False,
+        seed=42,
+        disable_tqdm=True
+    )
+
+    trainer = Trainer(
+        model=model,
+        args=training_args,
+        train_dataset=train_dataset,
+        data_collator=data_collator
+    )
+
+    print("\nStarting GPT-2 fine-tuning...")
+    print("Training examples:", len(train_dataset))
+    print("Epochs:", epochs)
+    print("Batch size:", batch_size)
+
+    train_result = trainer.train()
+
+    # Save the fine-tuned model and tokenizer
+    trainer.save_model(str(output_path))
+    tokenizer.save_pretrained(str(output_path))
+
+    training_loss = float(
+        train_result.training_loss
+    )
+
+    print("\nTraining completed!")
+    print("Average training loss:", training_loss)
+    print("Model saved:", output_path)
+
+    return {
+        "model": trainer.model,
+        "tokenizer": tokenizer,
+        "trainer": trainer,
+        "training_loss": training_loss,
+        "training_examples": len(train_dataset),
+        "epochs": epochs,
+        "batch_size": batch_size,
+        "category_tokens": data["category_tokens"],
+        "output_dir": str(output_path)
+    }
+
 
 
 # --- Milestone 4: Implement an inference function to classify new feedback.

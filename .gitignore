@@ -16,3 +16,17 @@ checkpoints/
 *.safetensors
 *.pt
 *.pth
+
+# Virtual environment
+.venv/
+venv/
+
+# Downloaded and trained models
+models/
+checkpoints/
+*.safetensors
+*.pt
+*.pth
+
+# Local secrets
+.env
