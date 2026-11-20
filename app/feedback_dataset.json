@@ -1,0 +1,37 @@
+
+[
+  {"id": 1, "text": "The headphones stopped working after two days.", "label": "PRODUCT_ISSUE"},
+  {"id": 2, "text": "The phone screen has a manufacturing defect.", "label": "PRODUCT_ISSUE"},
+  {"id": 3, "text": "The shoes tore after wearing them once.", "label": "PRODUCT_ISSUE"},
+  {"id": 4, "text": "The laptop battery drains too quickly.", "label": "PRODUCT_ISSUE"},
+  {"id": 5, "text": "The blender makes a loud noise and does not work properly.", "label": "PRODUCT_ISSUE"},
+  {"id": 6, "text": "The shirt I purchased had damaged stitching.", "label": "PRODUCT_ISSUE"},
+
+  {"id": 7, "text": "The cashier was very friendly and helpful.", "label": "STAFF_PRAISE"},
+  {"id": 8, "text": "The sales assistant patiently explained all the features.", "label": "STAFF_PRAISE"},
+  {"id": 9, "text": "The store manager handled my concern professionally.", "label": "STAFF_PRAISE"},
+  {"id": 10, "text": "The employees were polite and welcoming.", "label": "STAFF_PRAISE"},
+  {"id": 11, "text": "Customer support resolved my issue quickly.", "label": "STAFF_PRAISE"},
+  {"id": 12, "text": "The staff member helped me find the perfect product.", "label": "STAFF_PRAISE"},
+
+  {"id": 13, "text": "My package arrived three days later than expected.", "label": "DELIVERY_ISSUE"},
+  {"id": 14, "text": "The delivery person left my parcel at the wrong address.", "label": "DELIVERY_ISSUE"},
+  {"id": 15, "text": "My order has not arrived even after the expected delivery date.", "label": "DELIVERY_ISSUE"},
+  {"id": 16, "text": "The tracking information has not been updated.", "label": "DELIVERY_ISSUE"},
+  {"id": 17, "text": "The package was damaged during shipping.", "label": "DELIVERY_ISSUE"},
+  {"id": 18, "text": "I received the wrong item in my delivery.", "label": "DELIVERY_ISSUE"},
+
+  {"id": 19, "text": "The price of this product is too high.", "label": "PRICING_FEEDBACK"},
+  {"id": 20, "text": "The discount offered was very attractive.", "label": "PRICING_FEEDBACK"},
+  {"id": 21, "text": "The same item is cheaper at another store.", "label": "PRICING_FEEDBACK"},
+  {"id": 22, "text": "The product offers excellent value for money.", "label": "PRICING_FEEDBACK"},
+  {"id": 23, "text": "The final bill included unexpected extra charges.", "label": "PRICING_FEEDBACK"},
+  {"id": 24, "text": "I would appreciate more affordable pricing options.", "label": "PRICING_FEEDBACK"},
+
+  {"id": 25, "text": "The store was clean and well organized.", "label": "GENERAL_FEEDBACK"},
+  {"id": 26, "text": "I enjoyed shopping at this location.", "label": "GENERAL_FEEDBACK"},
+  {"id": 27, "text": "The store layout makes products easy to find.", "label": "GENERAL_FEEDBACK"},
+  {"id": 28, "text": "The checkout process was smooth and convenient.", "label": "GENERAL_FEEDBACK"},
+  {"id": 29, "text": "I would like to see more product varieties.", "label": "GENERAL_FEEDBACK"},
+  {"id": 30, "text": "The shopping experience was pleasant overall.", "label": "GENERAL_FEEDBACK"}
+]
