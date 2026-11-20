@@ -119,10 +119,123 @@ def milestone_1():
 
 
 
-# --- Milestone 2: Extend GPT-2 tokenizer and model with new category tokens.
-# Hint: Refer to the drill's approach for extending the tokenizer and model with new special tokens for your categories.
-def milestone_2():  # TODO(milestone 2)
-    raise NotImplementedError("TODO(milestone 2)")
+
+def milestone_2(
+    model_name="sshleifer/tiny-gpt2",
+    output_dir="models/feedback_gpt2"
+):
+    """
+    Extend the GPT-2 tokenizer and model with
+    customer feedback category tokens.
+    """
+    from pathlib import Path
+
+    from transformers import (
+        AutoTokenizer,
+        AutoModelForCausalLM
+    )
+
+    # Load the categories from Milestone 1
+    dataset = milestone_1()
+    category_tokens = dataset["category_tokens"]
+
+    print("Loading pretrained tokenizer...")
+
+    tokenizer = AutoTokenizer.from_pretrained(
+        model_name
+    )
+
+    original_vocab_size = len(tokenizer)
+
+    print("Loading pretrained GPT-2 model...")
+
+    model = AutoModelForCausalLM.from_pretrained(
+        model_name
+    )
+
+    # GPT-2 does not have a default padding token.
+    # Reuse EOS instead of adding another token.
+    tokenizer.pad_token = tokenizer.eos_token
+
+    print("Adding category tokens...")
+
+    added_tokens = tokenizer.add_special_tokens({
+        "additional_special_tokens": category_tokens
+    })
+
+    # The model must have an embedding for every token.
+    model.resize_token_embeddings(
+        len(tokenizer)
+    )
+
+    new_vocab_size = len(tokenizer)
+
+    # Verify each category is a single special token
+    token_ids = {}
+
+    for token in category_tokens:
+        token_id = tokenizer.convert_tokens_to_ids(
+            token
+        )
+
+        encoded = tokenizer.encode(
+            token,
+            add_special_tokens=False
+        )
+
+        if encoded != [token_id]:
+            raise ValueError(
+                f"Category token was not registered: {token}"
+            )
+
+        token_ids[token] = token_id
+
+    # Verify tokenizer and model have matching sizes
+    embedding_size = (
+        model.get_input_embeddings().weight.shape[0]
+    )
+
+    if embedding_size != new_vocab_size:
+        raise ValueError(
+            "Tokenizer and model vocabulary sizes differ"
+        )
+
+    # Save the extended model and tokenizer
+    output_path = Path(output_dir)
+
+    output_path.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    tokenizer.save_pretrained(
+        str(output_path)
+    )
+
+    model.save_pretrained(
+        str(output_path),
+        safe_serialization=True
+    )
+
+    print("\nTOKENIZER EXTENSION COMPLETE")
+    print("Original vocabulary:", original_vocab_size)
+    print("New vocabulary:", new_vocab_size)
+    print("Added tokens:", added_tokens)
+    print("Model saved to:", output_path)
+
+    return {
+        "model": model,
+        "tokenizer": tokenizer,
+        "model_name": model_name,
+        "original_vocab_size": original_vocab_size,
+        "new_vocab_size": new_vocab_size,
+        "added_tokens": added_tokens,
+        "category_tokens": category_tokens,
+        "token_ids": token_ids,
+        "embedding_size": embedding_size,
+        "output_dir": str(output_path)
+    }
+
 
 
 # --- Milestone 3: Fine-tune the model using the Hugging Face Trainer.

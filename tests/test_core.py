@@ -65,10 +65,83 @@ def test_milestone_1():
 
 
 
-# Milestone 2: Extend GPT-2 tokenizer and model with new category tokens.
-@pytest.mark.skip(reason="remove this line when you start milestone 2")
-def test_milestone_2():
-    raise NotImplementedError("write the test for milestone 2")
+
+# Milestone 2: Extend GPT-2 tokenizer and model
+def test_milestone_2(tmp_path):
+    from app.core import milestone_2
+
+    result = milestone_2(
+        model_name="sshleifer/tiny-gpt2",
+        output_dir=str(tmp_path / "extended_model")
+    )
+
+    # Verify result structure
+    assert isinstance(result, dict)
+
+    assert "model" in result
+    assert "tokenizer" in result
+    assert "category_tokens" in result
+    assert "token_ids" in result
+
+    # Verify five category tokens
+    assert len(result["category_tokens"]) == 5
+    assert result["added_tokens"] == 5
+
+    # Verify vocabulary extension
+    assert (
+        result["new_vocab_size"]
+        == result["original_vocab_size"] + 5
+    )
+
+    # Verify model embedding size
+    assert (
+        result["embedding_size"]
+        == result["new_vocab_size"]
+    )
+
+    tokenizer = result["tokenizer"]
+    model = result["model"]
+
+    assert (
+        model.get_input_embeddings().weight.shape[0]
+        == len(tokenizer)
+    )
+
+    # Verify category tokens are recognized individually
+    for token in result["category_tokens"]:
+        token_id = result["token_ids"][token]
+
+        encoded = tokenizer.encode(
+            token,
+            add_special_tokens=False
+        )
+
+        assert encoded == [token_id]
+
+    # Verify saved model and tokenizer
+    from pathlib import Path
+
+    output_path = Path(result["output_dir"])
+
+    assert (output_path / "config.json").exists()
+
+    assert (
+        (output_path / "model.safetensors").exists()
+        or (output_path / "pytorch_model.bin").exists()
+    )
+
+    # Verify model can be reloaded
+    from transformers import AutoModelForCausalLM
+
+    restored = AutoModelForCausalLM.from_pretrained(
+        str(output_path)
+    )
+
+    assert (
+        restored.get_input_embeddings().weight.shape[0]
+        == result["new_vocab_size"]
+    )
+
 
 
 # Milestone 3: Fine-tune the model using the Hugging Face Trainer.
