@@ -438,7 +438,48 @@ def milestone_4(
 
 
 
-# --- Milestone 5: Build a simple Streamlit app to input comments and show classifications.
-# Hint: Use Streamlit widgets to create an input text area and display the classification results.
-def milestone_5():  # TODO(milestone 5)
-    raise NotImplementedError("TODO(milestone 5)")
+
+def milestone_5(
+    comment,
+    model=None,
+    tokenizer=None,
+    model_dir="models/feedback_finetuned"
+):
+    """
+    Prepare a customer feedback classification
+    result for display in the Streamlit app.
+    """
+    if not isinstance(comment, str) or not comment.strip():
+        raise ValueError(
+            "Please enter a customer feedback comment."
+        )
+
+    result = milestone_4(
+        comment=comment,
+        model=model,
+        tokenizer=tokenizer,
+        model_dir=model_dir
+    )
+
+    categories = {
+        "PRODUCT_ISSUE": "Product Issue",
+        "STAFF_PRAISE": "Staff Praise",
+        "DELIVERY_ISSUE": "Delivery Issue",
+        "PRICING_FEEDBACK": "Pricing Feedback",
+        "GENERAL_FEEDBACK": "General Feedback"
+    }
+
+    predicted = result["predicted_category"]
+
+    return {
+        **result,
+        "display_category": categories.get(
+            predicted,
+            predicted.replace("_", " ").title()
+        ),
+        "confidence_percentage": round(
+            result["confidence"] * 100,
+            2
+        )
+    }
+

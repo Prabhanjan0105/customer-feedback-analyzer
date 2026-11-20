@@ -379,8 +379,76 @@ def test_milestone_4():
 
 
 
-# Milestone 5: Build a simple Streamlit app to input comments and show classifications.
-@pytest.mark.skip(reason="remove this line when you start milestone 5")
-def test_milestone_5():
-    raise NotImplementedError("write the test for milestone 5")
+
+# Milestone 5: Streamlit feedback classification
+def test_milestone_5(monkeypatch):
+    import pytest
+
+    from app import core
+
+    # Mock the Milestone 4 classifier so the
+    # UI formatting can be tested independently.
+    def fake_milestone_4(
+        comment,
+        model=None,
+        tokenizer=None,
+        model_dir="models/feedback_finetuned"
+    ):
+        return {
+            "comment": comment,
+            "predicted_category": "DELIVERY_ISSUE",
+            "predicted_token": "<DELIVERY_ISSUE>",
+            "confidence": 0.85,
+            "category_scores": {
+                "PRODUCT_ISSUE": 0.05,
+                "STAFF_PRAISE": 0.02,
+                "DELIVERY_ISSUE": 0.85,
+                "PRICING_FEEDBACK": 0.03,
+                "GENERAL_FEEDBACK": 0.05
+            }
+        }
+
+    monkeypatch.setattr(
+        core,
+        "milestone_4",
+        fake_milestone_4
+    )
+
+    result = core.milestone_5(
+        comment="My package arrived late.",
+        model=object(),
+        tokenizer=object()
+    )
+
+    assert isinstance(result, dict)
+
+    assert result["predicted_category"] == (
+        "DELIVERY_ISSUE"
+    )
+
+    assert result["display_category"] == (
+        "Delivery Issue"
+    )
+
+    assert result["confidence"] == 0.85
+
+    assert result["confidence_percentage"] == 85.0
+
+    assert len(result["category_scores"]) == 5
+
+    # Verify input validation
+    with pytest.raises(ValueError):
+        core.milestone_5(
+            comment="",
+            model=object(),
+            tokenizer=object()
+        )
+
+    with pytest.raises(ValueError):
+        core.milestone_5(
+            comment="   ",
+            model=object(),
+            tokenizer=object()
+        )
+
 
