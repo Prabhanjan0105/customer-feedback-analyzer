@@ -397,10 +397,45 @@ def milestone_3(
 
 
 
-# --- Milestone 4: Implement an inference function to classify new feedback.
-# Hint: Adapt the inference pipeline from the drill to process new customer comments and generate category predictions.
-def milestone_4():  # TODO(milestone 4)
-    raise NotImplementedError("TODO(milestone 4)")
+
+def milestone_4(
+    comment,
+    model=None,
+    tokenizer=None,
+    model_dir="models/feedback_finetuned"
+):
+    """
+    Classify new customer feedback using
+    the fine-tuned GPT-2 model.
+    """
+    from app.inference import (
+        load_feedback_model,
+        predict_feedback_category
+    )
+
+    if not isinstance(comment, str) or not comment.strip():
+        raise ValueError(
+            "Please enter a valid feedback comment"
+        )
+
+    # Load the trained model if not supplied.
+    if model is None or tokenizer is None:
+        model, tokenizer = load_feedback_model(
+            model_dir=model_dir
+        )
+
+    # Get category tokens from Milestone 1.
+    dataset = milestone_1()
+
+    result = predict_feedback_category(
+        comment=comment,
+        model=model,
+        tokenizer=tokenizer,
+        category_tokens=dataset["category_tokens"]
+    )
+
+    return result
+
 
 
 # --- Milestone 5: Build a simple Streamlit app to input comments and show classifications.

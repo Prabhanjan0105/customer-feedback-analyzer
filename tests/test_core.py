@@ -264,10 +264,119 @@ def test_milestone_3(tmp_path):
         restored_tokenizer.additional_special_tokens
     ) == 5
 
-# Milestone 4: Implement an inference function to classify new feedback.
-@pytest.mark.skip(reason="remove this line when you start milestone 4")
+
+# Milestone 4: Classify new customer feedback
 def test_milestone_4():
-    raise NotImplementedError("write the test for milestone 4")
+    import pytest
+    import torch
+
+    from torch import nn
+    from types import SimpleNamespace
+
+    from app.core import milestone_4
+
+    class FakeTokenizer:
+        def __init__(self):
+            self.category_ids = {
+                "<PRODUCT_ISSUE>": 10,
+                "<STAFF_PRAISE>": 11,
+                "<DELIVERY_ISSUE>": 12,
+                "<PRICING_FEEDBACK>": 13,
+                "<GENERAL_FEEDBACK>": 14
+            }
+
+        def encode(
+            self,
+            text,
+            add_special_tokens=False
+        ):
+            return [self.category_ids[text]]
+
+        def __call__(
+            self,
+            text,
+            return_tensors="pt",
+            truncation=True,
+            max_length=128
+        ):
+            return {
+                "input_ids": torch.tensor(
+                    [[1, 2, 3]],
+                    dtype=torch.long
+                ),
+                "attention_mask": torch.tensor(
+                    [[1, 1, 1]],
+                    dtype=torch.long
+                )
+            }
+
+    class FakeModel(nn.Module):
+        def __init__(self):
+            super().__init__()
+
+            self.dummy = nn.Parameter(
+                torch.zeros(1)
+            )
+
+        def forward(self, input_ids, attention_mask):
+            logits = torch.zeros(
+                1, 3, 20
+            )
+
+            # Force DELIVERY_ISSUE to win
+            logits[0, -1, 12] = 10.0
+
+            return SimpleNamespace(
+                logits=logits
+            )
+
+    model = FakeModel()
+    tokenizer = FakeTokenizer()
+
+    result = milestone_4(
+        comment="My delivery arrived late.",
+        model=model,
+        tokenizer=tokenizer
+    )
+
+    assert isinstance(result, dict)
+
+    assert result["predicted_category"] == (
+        "DELIVERY_ISSUE"
+    )
+
+    assert result["predicted_token"] == (
+        "<DELIVERY_ISSUE>"
+    )
+
+    assert 0.0 <= result["confidence"] <= 1.0
+
+    assert len(result["category_scores"]) == 5
+
+    assert (
+        result["category_scores"]["DELIVERY_ISSUE"]
+        > result["category_scores"]["PRODUCT_ISSUE"]
+    )
+
+    assert sum(
+        result["category_scores"].values()
+    ) == pytest.approx(1.0, abs=0.001)
+
+    # Empty feedback must be rejected
+    with pytest.raises(ValueError):
+        milestone_4(
+            comment="",
+            model=model,
+            tokenizer=tokenizer
+        )
+
+    with pytest.raises(ValueError):
+        milestone_4(
+            comment="   ",
+            model=model,
+            tokenizer=tokenizer
+        )
+
 
 
 # Milestone 5: Build a simple Streamlit app to input comments and show classifications.
